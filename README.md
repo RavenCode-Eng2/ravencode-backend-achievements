@@ -1,138 +1,343 @@
-# RavenCode Achievements API
+# RavenCode Achievements API v2.0.0
 
-API para gestionar los logros de estudiantes en la plataforma RavenCode. Permite registrar, actualizar y consultar logros asociados a estudiantes según su desempeño en módulos/cursos.
+🎯 **Enhanced API para gestionar logros de estudiantes en la plataforma RavenCode**
+
+API completamente mejorada con respuestas estandarizadas, validación avanzada, nuevos endpoints, manejo de errores robusto y optimización de base de datos.
 
 ---
 
-## 🚀 ¿Cómo levantar el backend?
+## 🌟 Nuevas características v2.0.0
 
-### 1. Clona el repositorio y entra a la carpeta
+- ✅ **Respuestas estandarizadas** con formato consistente
+- ✅ **Modelos mejorados** con campos adicionales (XP, metadata, timestamps)
+- ✅ **Nuevos endpoints** para estadísticas, eliminación y operaciones masivas
+- ✅ **Validación avanzada** con Pydantic validators
+- ✅ **Manejo de errores robusto** con excepciones personalizadas
+- ✅ **Optimización de base de datos** con índices automáticos
+- ✅ **Testing comprehensivo** con script de pruebas automatizado
+- ✅ **Documentación OpenAPI mejorada**
+
+---
+
+## 🚀 Inicio rápido
+
+### Opción 1: Script de inicio automático (Recomendado)
 ```bash
+# Clona el repositorio
+git clone <repository-url>
 cd ravencode-backend-achievements
-```
 
-### 2. Crea y activa un entorno virtual (recomendado)
-```bash
-python -m venv venv
-# En Windows:
-.\venv\Scripts\activate
-# En Linux/Mac:
-source venv/bin/activate
-```
-
-### 3. Instala las dependencias
-```bash
+# Instala dependencias
 pip install -r requirements.txt
+
+# Configura las variables de entorno (ver sección configuración)
+# Luego ejecuta el script de inicio que incluye inicialización de BD
+python startup.py
 ```
 
-### 4. Configura las variables de entorno
-Crea un archivo `.env` en la raíz del proyecto con la cadena de conexión a MongoDB:
+### Opción 2: Inicio manual
+```bash
+# Activa entorno virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# .\venv\Scripts\activate  # Windows
+
+# Instala dependencias
+pip install -r requirements.txt
+
+# Inicializa la base de datos (opcional pero recomendado)
+python -m app.DB.initialize
+
+# Inicia el servidor
+python -m app.main
 ```
+
+**🌐 API disponible en:** http://localhost:8003  
+**📚 Documentación:** http://localhost:8003/docs  
+**🔧 Documentación alternativa:** http://localhost:8003/redoc  
+**❤️ Health check:** http://localhost:8003/health
+
+---
+
+## ⚙️ Configuración
+
+Crea un archivo `.env` en la raíz del proyecto:
+```env
 MONGODB_URL=mongodb://localhost:27017
 DATABASE_NAME=ravencode_achievements_db
 ```
-Ajusta los valores según tu entorno.
-
-### 5. Levanta el servidor
-```bash
-uvicorn app.main:app --reload --port 8003
-```
-
-La API estará disponible en: [http://localhost:8003](http://localhost:8003)
-
-Puedes ver la documentación interactiva en: [http://localhost:8003/docs](http://localhost:8003/docs)
 
 ---
 
-## 🧠 Lógica de uso e integración desde el frontend
+## 🧪 Testing
 
-### 1. Registrar/actualizar un logro para un estudiante
-
-**Endpoint:**
-```
-POST /achievements/update
+Ejecuta el script de pruebas completo:
+```bash
+python test_api.py
 ```
 
-**Body esperado:**
+Este script prueba todos los endpoints y funcionalidades de la API v2.0.0.
+
+---
+
+## 📚 API Endpoints
+
+### Respuesta estándar
+Todos los endpoints ahora retornan el siguiente formato:
 ```json
 {
-  "email": "juan.perez@example.com",
-  "achievement": {
-    "achievement_name": "logro_001",
-    "course_id": "curso_python",
-    "title": "Curso de Python completado",
-    "description": "Completó el curso básico de Python"
-  },
-  "score": 85,
-  "total_points": 100
+  "data": "...",       // Datos de respuesta
+  "message": "...",    // Mensaje descriptivo
+  "success": true      // Indicador de éxito
 }
 ```
 
-- Si el estudiante obtiene **80% o más** (`score/total_points >= 0.8`), el logro se marca como obtenido (`achieved: true`).
-- Si no, se marca como no obtenido (`achieved: false`).
-- Si el estudiante no existe, se crea automáticamente.
-- Si el logro ya existe, se actualiza.
+### 🎯 Endpoints principales
+
+#### 1. Actualizar/crear logro
+```http
+POST /achievements/update
+```
+
+**Body:**
+```json
+{
+  "email": "student@example.com",
+  "achievement": {
+    "achievement_name": "first_lesson_completed",
+    "course_id": "python_basics",
+    "title": "Primera Lección Completada",
+    "description": "Completó la primera lección de Python",
+    "metadata": {
+      "xp": 50,
+      "category": "beginner",
+      "difficulty": "easy"
+    }
+  },
+  "score": 85.0,
+  "total_points": 100.0
+}
+```
 
 **Respuesta:**
 ```json
 {
-  "email": "juan.perez@example.com",
-  "achievement": {
-    "achievement_name": "logro_001",
-    "course_id": "curso_python",
-    "title": "Curso de Python completado",
-    "description": "Completó el curso básico de Python",
-    "achieved": true
+  "data": {
+    "email": "student@example.com",
+    "achievement": {
+      "id": "uuid-here",
+      "achievement_name": "first_lesson_completed",
+      "course_id": "python_basics",
+      "title": "Primera Lección Completada",
+      "description": "Completó la primera lección de Python",
+      "score": 85.0,
+      "total_points": 100.0,
+      "percentage": 85.0,
+      "date_earned": "2025-01-01T12:00:00",
+      "status": "completed",
+      "achieved": true,
+      "metadata": {
+        "xp": 50,
+        "category": "beginner",
+        "difficulty": "easy"
+      }
+    },
+    "achieved": true,
+    "percentage": 85.0,
+    "status": "completed"
   },
-  "achieved": true,
-  "percent": 85.0
+  "message": "Achievement updated successfully",
+  "success": true
 }
 ```
 
-### 2. Consultar los logros de un estudiante
-
-**Endpoint:**
-```
+#### 2. Obtener logros de estudiante
+```http
 GET /achievements/{email}
 ```
 
-**Respuesta ejemplo:**
+#### 3. Estadísticas de logros
+```http
+GET /achievements/{email}/stats
+```
+
+**Respuesta:**
 ```json
 {
-  "email": "juan.perez@example.com",
-  "achievements": [
-    {
-      "achievement_name": "logro_001",
-      "course_id": "curso_python",
-      "title": "Curso de Python completado",
-      "description": "Completó el curso básico de Python",
-      "achieved": true
+  "data": {
+    "total_achievements": 5,
+    "completed_achievements": 3,
+    "completion_rate": 60.0,
+    "total_xp": 250,
+    "average_score": 87.5,
+    "achievements_by_course": {
+      "python_basics": {
+        "total": 3,
+        "completed": 2,
+        "achievements": ["..."]
+      }
     },
-    ...
+    "recent_achievements": ["..."]
+  },
+  "message": "Achievement statistics retrieved successfully",
+  "success": true
+}
+```
+
+#### 4. Logros disponibles por curso
+```http
+GET /achievements/course/{course_id}/available
+```
+
+#### 5. Actualización masiva
+```http
+POST /achievements/bulk-update
+```
+
+**Body:**
+```json
+{
+  "updates": [
+    {
+      "email": "student1@example.com",
+      "achievement": { "..." },
+      "score": 90.0,
+      "total_points": 100.0
+    },
+    {
+      "email": "student2@example.com",
+      "achievement": { "..." },
+      "score": 85.0,
+      "total_points": 100.0
+    }
   ]
 }
 ```
 
----
-
-## 🧪 Lógica para testear desde el frontend
-
-1. **Registrar un logro:**
-   - Envía un POST a `/achievements/update` con los datos del estudiante, logro, puntaje obtenido y puntaje total.
-   - Verifica que la respuesta incluya el campo `achieved` correctamente calculado.
-
-2. **Consultar logros:**
-   - Haz un GET a `/achievements/{email}` y verifica que los logros estén correctamente almacenados y el campo `achieved` refleje el estado real.
-
-3. **Casos de prueba sugeridos:**
-   - Puntaje menor al 80%: el logro debe estar con `achieved: false`.
-   - Puntaje igual o mayor al 80%: el logro debe estar con `achieved: true`.
-   - Actualizar un logro existente: debe sobrescribir el estado anterior.
-   - Consultar un estudiante inexistente: debe devolver error 404.
+#### 6. Eliminar logro específico
+```http
+DELETE /achievements/{email}/{achievement_name}
+```
 
 ---
 
-## 📦 Notas adicionales
-- Puedes usar herramientas como Postman, Thunder Client o fetch/axios desde el frontend para probar los endpoints.
-- La API está lista para integrarse con React, Vue, Angular, etc.
-- Recuerda proteger los endpoints en producción (autenticación, CORS, etc.).
+## 🛡️ Validación y manejo de errores
+
+### Validaciones implementadas:
+- ✅ **Email válido** con formato correcto
+- ✅ **Score ≤ total_points** no puede ser mayor
+- ✅ **Total_points > 0** debe ser positivo
+- ✅ **Achievement_name** no puede estar vacío
+- ✅ **Cálculo automático** de porcentajes y estado
+
+### Códigos de error:
+- `404` - Estudiante o logro no encontrado
+- `422` - Datos de entrada inválidos
+- `503` - Error de conexión a base de datos
+- `400` - Error general de logros
+- `500` - Error inesperado del servidor
+
+---
+
+## 🗄️ Optimización de base de datos
+
+### Índices creados automáticamente:
+- **email** (único)
+- **email + achievement_name** (compuesto)
+- **course_id** para logros
+- **status** de logros
+- **date_earned** (descendente)
+- **achieved** status
+- **updated_at** (descendente)
+
+---
+
+## 🔄 Migración desde v1.0.0
+
+### Cambios importantes:
+1. **Formato de respuesta**: Todas las respuestas ahora usan `StandardResponse`
+2. **Campos adicionales**: Los logros tienen más información (score, percentage, metadata, etc.)
+3. **Nuevos endpoints**: Estadísticas, eliminación, operaciones masivas
+
+### Compatibilidad:
+- ✅ **URLs iguales** para endpoints existentes
+- ✅ **Datos existentes** se migran automáticamente
+- ⚠️ **Frontend** debe adaptarse al nuevo formato de respuesta
+
+---
+
+## 🧠 Lógica de uso
+
+### 1. **Creación automática de logros**
+- Cuando el puntaje ≥ 80% → `achieved: true`, `status: "completed"`
+- Cuando 0% < puntaje < 80% → `achieved: false`, `status: "in_progress"`
+- Cuando puntaje = 0% → `achieved: false`, `status: "failed"`
+
+### 2. **Cálculos automáticos**
+- **Percentage**: `(score / total_points) * 100`
+- **Status**: Basado en percentage
+- **Date_earned**: Solo cuando `achieved: true`
+- **ID único**: UUID generado automáticamente
+
+### 3. **XP y metadata**
+- Sistema de **experiencia (XP)** acumulativa
+- **Metadata flexible** para categorías, dificultad, etc.
+- **Estadísticas** calculadas en tiempo real
+
+---
+
+## 📋 Scripts útiles
+
+```bash
+# Iniciar con optimización de BD
+python startup.py
+
+# Solo inicializar BD
+python -m app.DB.initialize
+
+# Ejecutar tests
+python test_api.py
+
+# Verificar conexión a BD
+python -c "from app.DB.database import test_connection; test_connection()"
+```
+
+---
+
+## 🔧 Desarrollo
+
+### Estructura mejorada:
+```
+app/
+├── main.py              # FastAPI app principal
+├── api/
+│   └── achievements.py  # Endpoints de logros
+├── models/
+│   ├── __init__.py     # StandardResponse
+│   ├── student.py      # Modelos mejorados
+│   └── exceptions.py   # Excepciones personalizadas
+├── services/
+│   └── achievement_service.py  # Lógica de negocio
+└── DB/
+    ├── database.py     # Conexión a MongoDB
+    └── initialize.py   # Inicialización y índices
+```
+
+### Para contribuir:
+1. Instala dependencias de desarrollo
+2. Ejecuta tests antes de commit
+3. Sigue las convenciones de código existentes
+4. Actualiza documentación cuando sea necesario
+
+---
+
+## 📞 Soporte
+
+- **Documentación interactiva**: http://localhost:8003/docs
+- **Health check**: http://localhost:8003/health
+- **Tests**: `python test_api.py`
+- **Logs**: Configurados en todos los módulos
+
+---
+
+**🎉 ¡La API v2.0.0 está lista para producción con todas las mejoras recomendadas implementadas!**
